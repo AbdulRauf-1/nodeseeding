@@ -10,7 +10,7 @@ on:
       deploy_flag:
         description: "Set to 'yes' to deploy to production"
         required: true
-        default: "no"
+        default: "noo"
 
 
 jobs:
