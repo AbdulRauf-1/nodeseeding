@@ -42,11 +42,14 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      # Step 2: Create necessary files
-      - name: Create .htaccess file
+      - name: Clear remote server directory
         run: |
-          echo "Removing all file..."
-          rm -rf * .*
+          echo "Connecting to FTP and deleting all remote files..."
+          lftp -u "${{ secrets.FTP_USERNAME }},${{ secrets.FTP_PASSWORD }}" ftp.trimworldwide.com << EOF
+          cd /home/trimworldwide/rauf.trimworldwide.com
+          mrm -rf *
+          bye
+          EOF
 
       # Step 2: Create necessary files
       - name: Create .htaccess file
