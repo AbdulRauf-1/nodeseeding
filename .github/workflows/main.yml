@@ -4,9 +4,13 @@ on:
   push:
     branches:
       - testing
-  workflow_dispatch:
-    branches:
       - main
+  workflow_dispatch:
+    inputs:
+      deploy_flag:
+        description: "Set to 'yes' to deploy to production"
+        required: true
+        default: "yes"
 
 jobs:
   build:
@@ -42,8 +46,6 @@ jobs:
     if: github.ref == 'refs/heads/testing'
     runs-on: ubuntu-latest
     steps:
-
-
       # Step 1: Checkout the latest code
       - name: Checkout code
         uses: actions/checkout@v2
@@ -53,7 +55,7 @@ jobs:
         run: |
           echo "Creating .htaccess file..."
           echo "${{ secrets.HTACCESS_CONTENT }}" > .htaccess
-      
+
       - name: Create .env file
         run: |
           echo "Creating .env file..."
@@ -71,7 +73,7 @@ jobs:
         run: ls -la
 
       # Step 4: Sync files to cPanel via FTP
-      - name: Sync files to development
+      - name: Sync files to testing environment
         uses: SamKirkland/FTP-Deploy-Action@v4.2.0
         with:
           server: ftp.trimworldwide.com
@@ -84,32 +86,30 @@ jobs:
           echo "Triggering npm install via PHP script..."
           curl -X GET "https://rauf.trimworldwide.com/trigger.php"
 
-
-  deploy_main:
+  deploy-main:
     needs: build
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
-
     steps:
-      - name: 🚚 Get latest code
-        uses: actions/checkout@v2
       - name: Check deployment flag
         id: check-flag
         run: |
-          DEPLOY_FLAG="yes" # Set the flag here. Change to "yes" to enable deployment.
-          echo "Deployment flag is set to: $DEPLOY_FLAG"
-          if [ "$DEPLOY_FLAG" != "yes" ]; then
-            echo "Deployment flag is not set to 'yes'. Skipping deployment."
+          echo "Flag passed from workflow_dispatch: ${{ github.event.inputs.deploy_flag }}"
+          if [[ "${{ github.event.inputs.deploy_flag }}" != "yes" ]]; then
+            echo "Deployment flag is not 'yes'. Skipping deployment."
             exit 0
           fi
 
+      # Step 1: Checkout the latest code
+      - name: Checkout code
+        uses: actions/checkout@v2
 
       # Step 2: Create necessary files
       - name: Create .htaccess file
         run: |
           echo "Creating .htaccess file..."
           echo "${{ secrets.HTACCESS_CONTENT }}" > .htaccess
-      
+
       - name: Create .env file
         run: |
           echo "Creating .env file..."
@@ -127,7 +127,7 @@ jobs:
         run: ls -la
 
       # Step 4: Sync files to cPanel via FTP
-      - name: Sync files to development
+      - name: Sync files to production environment
         uses: SamKirkland/FTP-Deploy-Action@v4.2.0
         with:
           server: ftp.trimworldwide.com
