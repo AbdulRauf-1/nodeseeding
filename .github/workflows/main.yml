@@ -85,16 +85,14 @@ jobs:
           curl -X GET "https://rauf.trimworldwide.com/trigger.php"
 
 
-  deploy-main:
+  deploy_main:
     needs: build
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
 
     steps:
-      # Step 1: Checkout the latest code
-      - name: Checkout code
+      - name: 🚚 Get latest code
         uses: actions/checkout@v2
-
       - name: Check deployment flag
         id: check-flag
         run: |
@@ -104,6 +102,7 @@ jobs:
             echo "Deployment flag is not set to 'yes'. Skipping deployment."
             exit 0
           fi
+
 
       # Step 2: Create necessary files
       - name: Create .htaccess file
