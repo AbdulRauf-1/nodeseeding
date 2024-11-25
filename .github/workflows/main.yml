@@ -1,79 +1,60 @@
-name: Deploy Node.js Project to cPanel via FTP
+deploy:
+  needs: build
+  runs-on: ubuntu-latest
+  steps:
+    # Step 1: Checkout the latest code
+    - name: Checkout code
+      uses: actions/checkout@v2
 
-on:
-  push:
-    branches:
-      - main
+    # Step 2: Install lftp
+    - name: Install lftp
+      run: |
+        echo "Installing lftp..."
+        sudo apt-get update
+        sudo apt-get install -y lftp
 
-jobs:
-  build:
-    runs-on: ubuntu-latest
-    container:
-      image: node:18.20.4
-    steps:
-      # Step 1: Checkout the code
-      - name: Checkout code
-        uses: actions/checkout@v2
+    # Step 3: Clear remote server directory
+    - name: Clear remote server directory
+      run: |
+        echo "Connecting to FTP and deleting all remote files..."
+        lftp -u "${{ secrets.FTP_USERNAME }},${{ secrets.FTP_PASSWORD }}" ftp.trimworldwide.com << EOF
+        set ssl:verify-certificate no
+        cd /home/trimworldwide/rauf.trimworldwide.com
+        mrm -rf *
+        bye
+        EOF
 
-      # Step 2: Cache node_modules
-      - name: Cache node modules
-        uses: actions/cache@v2
-        with:
-          path: node_modules
-          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-node-
+    # Step 4: Create additional files locally
+    - name: Create .htaccess file
+      run: |
+        echo "Creating .htaccess file..."
+        echo "${{ secrets.HTACCESS_CONTENT }}" > .htaccess
 
-      # Step 3: Install dependencies
-      - name: Install dependencies
-        run: npm ci
+    - name: Create .env file
+      run: |
+        echo "Creating .env file..."
+        echo "${{ secrets.ENV }}" > .env
 
-      # Step 4: Verify node_modules creation
-      - name: Verify node_modules
-        run: |
-          echo "Verifying node_modules directory..."
-          ls -la node_modules
+    - name: Create config folder and file
+      run: |
+        echo "Creating config folder and file..."
+        mkdir -p config
+        echo "${{ secrets.CONFIG_DB }}" > config/config.js
 
-  deploy:
-    needs: build
-    runs-on: ubuntu-latest
-    steps:
-      # Step 1: Checkout the latest code
-      - name: Checkout code
-        uses: actions/checkout@v2
+    # Step 5: Verify created files
+    - name: Verify created files
+      run: ls -la
 
-      # Step 2: Create necessary files
-      - name: Create .htaccess file
-        run: |
-          echo "Creating .htaccess file..."
-          echo "${{ secrets.HTACCESS_CONTENT }}" > .htaccess
-      
-      - name: Create .env file
-        run: |
-          echo "Creating .env file..."
-          echo "${{ secrets.ENV }}" > .env
+    # Step 6: Sync new files to the remote server
+    - name: Sync files to remote server
+      uses: SamKirkland/FTP-Deploy-Action@v4.2.0
+      with:
+        server: ftp.trimworldwide.com
+        username: ${{ secrets.FTP_USERNAME }}
+        password: ${{ secrets.FTP_PASSWORD }}
 
-      - name: Create config folder and file
-        run: |
-          echo "Creating config folder..."
-          mkdir config
-          cd config
-          echo "${{ secrets.CONFIG_DB }}" > db.js
-
-      # Step 3: Debugging - List files to ensure .htaccess and node_modules exist
-      - name: List files before deployment
-        run: ls -la
-
-      # Step 4: Sync files to cPanel via FTP
-      - name: Sync files to development
-        uses: SamKirkland/FTP-Deploy-Action@v4.2.0
-        with:
-          server: ftp.trimworldwide.com
-          username: ${{ secrets.FTP_USERNAME }}
-          password: ${{ secrets.FTP_PASSWORD }}
-
-      # Step 5: Trigger npm install on the server
-      - name: Trigger npm install on server
-        run: |
-          echo "Triggering npm install via PHP script..."
-          curl -X GET "https://rauf.trimworldwide.com/trigger.php"
+    # Step 7: Trigger npm install on the server
+    - name: Trigger npm install on server
+      run: |
+        echo "Triggering npm install via PHP script..."
+        curl -X GET "https://rauf.trimworldwide.com/trigger.php"
