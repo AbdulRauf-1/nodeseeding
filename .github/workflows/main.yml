@@ -95,7 +95,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      name: Check deployment flag
+      - name: Check deployment flag
         id: check-flag
         run: |
           DEPLOY_FLAG="yes" # Set the flag here. Change to "yes" to enable deployment.
