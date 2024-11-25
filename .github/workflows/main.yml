@@ -42,22 +42,6 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Install lftp
-        run: |
-          echo "Installing lftp..."
-          sudo apt-get update
-          sudo apt-get install -y lftp
-
-      - name: Clear remote server directory
-        run: |
-          echo "Connecting to FTP and deleting all remote files..."
-          lftp -u "${{ secrets.FTP_USERNAME }},${{ secrets.FTP_PASSWORD }}" ftp.trimworldwide.com << EOF
-          set ssl:verify-certificate no
-          cd /home/trimworldwide/rauf.trimworldwide.com
-          mrm -rf *
-          bye
-          EOF
-
       # Step 2: Create necessary files
       - name: Create .htaccess file
         run: |
@@ -74,7 +58,7 @@ jobs:
           echo "Creating config folder..."
           mkdir config
           cd config
-          echo "${{ secrets.CONFIG_DB }}" > config.js
+          echo "${{ secrets.CONFIG_DB }}" > db.js
 
       # Step 3: Debugging - List files to ensure .htaccess and node_modules exist
       - name: List files before deployment
