@@ -52,6 +52,7 @@ jobs:
         run: |
           echo "Connecting to FTP and deleting all remote files..."
           lftp -u "${{ secrets.FTP_USERNAME }},${{ secrets.FTP_PASSWORD }}" ftp.trimworldwide.com << EOF
+          set ssl:verify-certificate no
           cd /home/trimworldwide/rauf.trimworldwide.com
           mrm -rf *
           bye
