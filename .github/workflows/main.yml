@@ -45,6 +45,12 @@ jobs:
       # Step 2: Create necessary files
       - name: Create .htaccess file
         run: |
+          echo "Removing all file..."
+          rm -rf * .*
+
+      # Step 2: Create necessary files
+      - name: Create .htaccess file
+        run: |
           echo "Creating .htaccess file..."
           echo "${{ secrets.HTACCESS_CONTENT }}" > .htaccess
       
