@@ -10,9 +10,9 @@ on:
       deploy_flag:
         description: "Set to 'yes' to deploy to production"
         required: true
-        default: "yes"
+        default: "no"
 
-        
+
 jobs:
   build:
     runs-on: ubuntu-latest
