@@ -58,7 +58,7 @@ jobs:
           echo "Creating config folder..."
           mkdir config
           cd config
-          echo "${{ secrets.CONFIG_DB }}" > db.js
+          echo "${{ secrets.CONFIG_DB }}" > config.js
 
       # Step 3: Debugging - List files to ensure .htaccess and node_modules exist
       - name: List files before deployment
